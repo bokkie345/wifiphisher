@@ -492,7 +492,7 @@ class NetworkManager(object):
         try:
             pyw.macset(card, mac_address)
         # make sure to catch an invalid mac address
-        except pyric.error as error:
+        except pyric.error:
             raise InvalidMacAddressError(mac_address)
 
     def get_interface_mac(self, interface_name):
@@ -836,11 +836,11 @@ def is_managed_by_network_manager(interface_name):
     try:
         out = check_output(["nmcli", "dev"])
         for l in out.splitlines():
-            #TODO: If the device is managed and user has nmcli installed, 
+            # TODO: If the device is managed and user has nmcli installed,
             # we can probably do a "nmcli dev set wlan0 managed no"
             if interface_name in l and "unmanaged" not in l:
                 is_managed = True
-    # NetworkManager service is not running so the devices must be unmanaged 
+    # NetworkManager service is not running so the devices must be unmanaged
     # (CalledProcessError)
     # Or nmcli is not installed...
     except:

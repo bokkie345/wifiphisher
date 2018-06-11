@@ -10,7 +10,8 @@ from collections import defaultdict
 import scapy.layers.dot11 as dot11
 import wifiphisher.common.constants as constants
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+
 
 def is_deauth_frame(packet):
     """
@@ -23,6 +24,7 @@ def is_deauth_frame(packet):
     if packet.subtype == 10 or packet.subtype == 12:
         return True
     return False
+
 
 class Deauth(object):
     """
@@ -117,7 +119,7 @@ class Deauth(object):
             try:
                 essid = packet[dot11.Dot11Elt].info.decode("utf8")
             except UnicodeDecodeError:
-                logger.warning("Unable to decode the essid with with bssid %s",
+                LOGGER.warning("Unable to decode the essid with with bssid %s",
                                packet.addr3)
                 return False
 
@@ -155,7 +157,7 @@ class Deauth(object):
             receiver = packet.addr1
             sender = packet.addr2
         except AttributeError:
-            logger.debug("Malformed frame doesn't contain address fields")
+            LOGGER.debug("Malformed frame doesn't contain address fields")
             return self._packets_to_send
 
         # obtain the channel for this packet
@@ -168,7 +170,7 @@ class Deauth(object):
                 return self._packets_to_send
         except (TypeError, IndexError):
             # just return empty channel and packet
-            logger.debug("Malformed frame doesn't contain channel field")
+            LOGGER.debug("Malformed frame doesn't contain channel field")
             return self._packets_to_send
 
         bssid = self._extract_bssid(packet)
@@ -178,19 +180,18 @@ class Deauth(object):
                 and self._is_target(packet)):
             # listen beacon to get the target attacking BSSIDs for the
             # specified ESSID
-            packets_to_send += self._craft_packet(bssid,
-                                                  constants.WIFI_BROADCAST,
-                                                  bssid)
-            logger.info("Target deauth BSSID found: %s", bssid)
+            packets_to_send += self._craft_packet(
+                bssid, constants.WIFI_BROADCAST, bssid)
+            LOGGER.info("Target deauth BSSID found: %s", bssid)
             # remember the channel of the given bssid
             self._deauth_bssids[bssid] = str(channel)
         elif bssid in self._deauth_bssids:
             # the bssid is already in the deauth set and we need to check
             # if the channel of the target AP has been changed
             if str(channel) != self._deauth_bssids[bssid]:
-                logger.info("BSSID: %s changes channel to %d", bssid, channel)
-                self._update_target_ap_frames(str(channel),
-                                              str(self._deauth_bssids[bssid]), bssid)
+                LOGGER.info("BSSID: %s changes channel to %d", bssid, channel)
+                self._update_target_ap_frames(
+                    str(channel), str(self._deauth_bssids[bssid]), bssid)
         if bssid not in self._deauth_bssids:
             return self._packets_to_send
 
@@ -198,7 +199,8 @@ class Deauth(object):
         if clients:
             self._observed_clients.add(clients[0])
             packets_to_send += clients[1]
-            logger.info("Client with BSSID %s is now getting deauthenticated", clients[0])
+            LOGGER.info("Client with BSSID %s is now getting deauthenticated",
+                        clients[0])
 
         self._packets_to_send[str(channel)] += packets_to_send
 

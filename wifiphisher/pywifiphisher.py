@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 # pylint: skip-file
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import subprocess
 import os
 import logging
@@ -8,17 +10,12 @@ import logging.config
 import time
 import sys
 import argparse
-import fcntl
 import curses
-import socket
-import struct
 import signal
 from threading import Thread
-from subprocess import Popen, PIPE, check_output
 from shutil import copyfile
 from wifiphisher.common.constants import *
 import wifiphisher.common.extensions as extensions
-import wifiphisher.common.recon as recon
 import wifiphisher.common.phishingpage as phishingpage
 import wifiphisher.common.phishinghttp as phishinghttp
 import wifiphisher.common.macmatcher as macmatcher
@@ -130,15 +127,21 @@ def parse_args():
     parser.add_argument(
         "--payload-path",
         help=("Payload path for scenarios serving a payload"))
-    parser.add_argument("-cM", "--channel-monitor",
-                        help="Monitor if target access point changes the channel.",
-                        action="store_true")
-    parser.add_argument("-wP", "--wps-pbc",
-                        help="Monitor if the button on a WPS-PBC Registrar is pressed.",
-                        action="store_true")
-    parser.add_argument("-wAI", "--wpspbc-assoc-interface",
-                        help="The WLAN interface used for associating to the WPS AccessPoint.",
-                        )
+    parser.add_argument(
+        "-cM",
+        "--channel-monitor",
+        help="Monitor if target access point changes the channel.",
+        action="store_true")
+    parser.add_argument(
+        "-wP",
+        "--wps-pbc",
+        help="Monitor if the button on a WPS-PBC Registrar is pressed.",
+        action="store_true")
+    parser.add_argument(
+        "-wAI",
+        "--wpspbc-assoc-interface",
+        help="The WLAN interface used for associating to the WPS AccessPoint.",
+    )
     parser.add_argument(
         "-kB",
         "--known-beacons",
@@ -178,17 +181,17 @@ def set_ip_fwd():
     """
     Set kernel variables.
     """
-    Popen(['sysctl', '-w', 'net.ipv4.ip_forward=1'], stdout=DN, stderr=PIPE)
+    subprocess.Popen(['sysctl', '-w', 'net.ipv4.ip_forward=1'], stdout=DN, stderr=subprocess.PIPE)
 
 
 def set_route_localnet():
     """
     Set kernel variables.
     """
-    Popen(
+    subprocess.Popen(
         ['sysctl', '-w', 'net.ipv4.conf.all.route_localnet=1'],
         stdout=DN,
-        stderr=PIPE)
+        stderr=subprocess.PIPE)
 
 
 def kill_interfering_procs():
@@ -228,8 +231,8 @@ def kill_interfering_procs():
             # kill all the processes name equal to interfering_proc
             if interfering_proc in proc:
                 pid = int(proc.split(None, 1)[0])
-                print '[' + G + '+' + W + "] Sending SIGKILL to " +\
-                    interfering_proc
+                print('[' + G + '+' + W + "] Sending SIGKILL to " +
+                      interfering_proc)
                 os.kill(pid, signal.SIGKILL)
 
 
@@ -245,13 +248,15 @@ class WifiphisherEngine:
 
     def stop(self):
         if DEV:
-            print "[" + G + "+" + W + "] Show your support!"
-            print "[" + G + "+" + W + "] Follow us: https://twitter.com/wifiphisher"
-            print "[" + G + "+" + W + "] Like us: https://www.facebook.com/Wifiphisher"
-        print "[" + G + "+" + W + "] Captured credentials:"
+            print("[" + G + "+" + W + "] Show your support!")
+            print("[" + G + "+" + W +
+                  "] Follow us: https://twitter.com/wifiphisher")
+            print("[" + G + "+" + W +
+                  "] Like us: https://www.facebook.com/Wifiphisher")
+        print("[" + G + "+" + W + "] Captured credentials:")
         for cred in phishinghttp.creds:
             logger.info("Creds: %s", cred)
-            print cred
+            print(cred)
 
         # EM depends on Network Manager.
         # It has to shutdown first.
@@ -266,7 +271,7 @@ class WifiphisherEngine:
         if os.path.isfile('/tmp/wifiphisher-webserver.tmp'):
             os.remove('/tmp/wifiphisher-webserver.tmp')
 
-        print '[' + R + '!' + W + '] Closing'
+        print('[' + R + '!' + W + '] Closing')
         sys.exit(0)
 
     def try_change_mac(self, iface_name, mac_address=None):
@@ -409,8 +414,8 @@ class WifiphisherEngine:
         if not args.no_mac_randomization:
             logger.info("Changing {} MAC address to {}".format(
                 ap_iface, rogue_ap_mac))
-            print "[{0}+{1}] Changing {2} MAC addr (BSSID) to {3}".format(
-                G, W, ap_iface, rogue_ap_mac)
+            print("[{0}+{1}] Changing {2} MAC addr (BSSID) to {3}".format(
+                G, W, ap_iface, rogue_ap_mac))
 
             if self.opmode.extensions_enabled():
                 mon_mac = self.network_manager.get_interface_mac(mon_iface)
@@ -426,7 +431,8 @@ class WifiphisherEngine:
             self.fw.redirect_requests_localhost()
         set_route_localnet()
 
-        print '[' + T + '*' + W + '] Cleared leases, started DHCP, set up iptables'
+        print('[' + T + '*' + W +
+              '] Cleared leases, started DHCP, set up iptables')
         time.sleep(1)
 
         if args.essid:
@@ -476,8 +482,9 @@ class WifiphisherEngine:
                     "[" + G + "+" + W + "] Enter the [" + G + "full path" + W +
                     "] to the payload you wish to serve: ")
                 if not os.path.isfile(payload_path):
-                    print '[' + R + '-' + W + '] Invalid file path!'
-            print '[' + T + '*' + W + '] Using ' + G + payload_path + W + ' as payload '
+                    print('[' + R + '-' + W + '] Invalid file path!')
+            print('[' + T + '*' + W + '] Using ' + G + payload_path + W +
+                  ' as payload ')
             template.update_payload_path(os.path.basename(payload_path))
             copyfile(payload_path,
                      PHISHING_PAGES_DIR + template.get_payload_path())
@@ -532,9 +539,9 @@ class WifiphisherEngine:
         self.access_point.set_channel(channel)
         self.access_point.set_essid(essid)
         if args.force_hostapd:
-            print('[' + T + '*' + W + '] Using hostapd instead of roguehostapd.'
-                  " Many significant features will be turned off."
-                 )
+            print('[' + T + '*' + W +
+                  '] Using hostapd instead of roguehostapd.'
+                  " Many significant features will be turned off.")
             self.access_point.enable_system_hostapd()
         if args.wpspbc_assoc_interface:
             wps_mac = self.network_manager.get_interface_mac(
@@ -544,7 +551,7 @@ class WifiphisherEngine:
             self.access_point.set_psk(args.presharedkey)
         if self.opmode.internet_sharing_enabled():
             self.access_point.set_internet_interface(args.internetinterface)
-        print '[' + T + '*' + W + '] Starting the fake access point...'
+        print('[' + T + '*' + W + '] Starting the fake access point...')
         try:
             self.access_point.start()
             self.access_point.start_dhcp_dns()
@@ -587,8 +594,9 @@ class WifiphisherEngine:
         # With configured DHCP, we may now start the web server
         if not self.opmode.internet_sharing_enabled():
             # Start HTTP server in a background thread
-            print '[' + T + '*' + W + '] Starting HTTP/HTTPS server at ports ' + str(
-                PORT) + ", " + str(SSL_PORT)
+            print('[' + T + '*' + W +
+                  '] Starting HTTP/HTTPS server at ports ' + str(PORT) + ", " +
+                  str(SSL_PORT))
             webserver = Thread(
                 target=phishinghttp.runHTTPServer,
                 args=(NETWORK_GW_IP, PORT, SSL_PORT, template, self.em))
@@ -617,18 +625,17 @@ class WifiphisherEngine:
 def run():
     try:
         today = time.strftime("%Y-%m-%d %H:%M")
-        print ('[' + T + '*' + W + '] Starting Wifiphisher %s ( %s ) at %s' %
-               (VERSION, WEBSITE, today))
+        print('[' + T + '*' + W + '] Starting Wifiphisher %s ( %s ) at %s' %
+              (VERSION, WEBSITE, today))
         if BIRTHDAY in today:
-            print '[' + T + '*' + W + \
-            '] Wifiphisher was first released on this day in 2015! ' \
-            'Happy birthday!'
+            print('[' + T + '*' + W +
+                  '] Wifiphisher was first released on this day in 2015! '
+                  'Happy birthday!')
         if NEW_YEAR in today:
-            print '[' + T + '*' + W + \
-            '] Happy new year!'
+            print('[' + T + '*' + W + '] Happy new year!')
         engine = WifiphisherEngine()
         engine.start()
     except KeyboardInterrupt:
-        print R + '\n (^C)' + O + ' interrupted\n' + W
+        print(R + '\n (^C)' + O + ' interrupted\n' + W)
     except EOFError:
-        print R + '\n (^D)' + O + ' interrupted\n' + W
+        print(R + '\n (^D)' + O + ' interrupted\n' + W)
