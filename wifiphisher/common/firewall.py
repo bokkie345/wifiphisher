@@ -1,6 +1,6 @@
-#pylint: skip-file
+# pylint: skip-file
 import subprocess
-from wifiphisher.common.constants import *
+from .constants import (NETWORK_GW_IP, PORT, SSL_PORT)
 
 
 class Fw():

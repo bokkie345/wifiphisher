@@ -109,8 +109,8 @@ class Wpspbc(object):
                 pos = 0
                 # start looping to find the WPS PBC IE
                 while pos < len(wps_ie_array):
-                    if wps_ie_array[pos] == 0x10 and wps_ie_array[pos
-                                                                  + 1] == 0x12:
+                    if wps_ie_array[pos] == 0x10 and wps_ie_array[pos +
+                                                                  1] == 0x12:
                         return True
                     else:
                         data_len = (
@@ -142,9 +142,8 @@ class Wpspbc(object):
         :rtype: None
         """
 
-        logger.info("wps state is transiting from %s to %s",\
-                    WPS_2_STR[self.get_wps_state()],
-                    WPS_2_STR[new_state])
+        logger.info("wps state is transiting from %s to %s",
+                    WPS_2_STR[self.get_wps_state()], WPS_2_STR[new_state])
         self._wps_state = new_state
 
     def is_associated(self):
@@ -262,7 +261,7 @@ class Wpspbc(object):
         :rtype: tuple
         """
         try:
-            bssid = packet.addr3
+            packet.addr3
         except AttributeError:
             logger.debug("Malformed frame doesn't contain address fields")
             return self._packets_to_send

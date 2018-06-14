@@ -6,7 +6,6 @@ import tornado.ioloop
 import tornado.web
 import os.path
 import wifiphisher.common.uimethods as uimethods
-import wifiphisher.common.extensions as extensions
 import wifiphisher.common.constants as constants
 
 hn = logging.NullHandler()
@@ -17,7 +16,7 @@ logging.getLogger('tornado.general').disabled = True
 template = False
 terminate = False
 creds = []
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class DowngradeToHTTP(tornado.web.RequestHandler):
@@ -26,9 +25,7 @@ class DowngradeToHTTP(tornado.web.RequestHandler):
 
 
 class BackendHandler(tornado.web.RequestHandler):
-    """
-    Validate the POST requests from client by the uimethods
-    """
+    """Validate the POST requests from client by the uimethods."""
 
     def initialize(self, em):
         """
@@ -96,7 +93,7 @@ class CaptivePortalHandler(tornado.web.RequestHandler):
             log_file.write("GET request from {0} for {1}\n".format(
                 self.request.remote_ip, self.request.full_url()))
         # record the GET request in the logging file
-        logger.info("GET request from %s for %s", self.request.remote_ip,
+        LOGGER.info("GET request from %s for %s", self.request.remote_ip,
                     self.request.full_url())
 
     def post(self):
@@ -128,10 +125,11 @@ class CaptivePortalHandler(tornado.web.RequestHandler):
                 log_file.write("POST request from {0} with {1}\n".format(
                     self.request.remote_ip, post_data))
                 # record the post requests in the logging file
-                logger.info("POST request from %s with %s",
+                LOGGER.info("POST request from %s with %s",
                             self.request.remote_ip, post_data)
-            if re.search(constants.REGEX_PWD, post_data, re.IGNORECASE) or \
-            re.search(constants.REGEX_UNAME, post_data, re.IGNORECASE):
+            if (re.search(constants.REGEX_PWD, post_data, re.IGNORECASE)
+                    or re.search(constants.REGEX_UNAME, post_data,
+                                 re.IGNORECASE)):
                 creds.append(post_data)
                 terminate = True
 
@@ -149,7 +147,7 @@ class CaptivePortalHandler(tornado.web.RequestHandler):
         self.render(file_path, **template.get_context())
 
 
-def runHTTPServer(ip, port, ssl_port, t, em):
+def run_http_server(ip, port, ssl_port, t, em):
     global template
     template = t
 

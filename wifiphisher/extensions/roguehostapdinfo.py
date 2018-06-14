@@ -4,7 +4,7 @@ information regarding automatic association attacks.
 """
 
 from collections import defaultdict
-import wifiphisher.common.constants as constants
+from ..common.constants import KNOWN_WLANS_FILE
 
 
 class Roguehostapdinfo(object):
@@ -50,7 +50,7 @@ class Roguehostapdinfo(object):
         known_beacons_ssids = set()
         # locate the known WLANS file
         if self._data.args.known_beacons:
-            area_file = constants.KNOWN_WLANS_FILE
+            area_file = KNOWN_WLANS_FILE
             with open(area_file) as _file:
                 for line in _file:
                     if line.startswith("!"):
@@ -93,7 +93,8 @@ class Roguehostapdinfo(object):
             if mac not in self._known_beacon_ssids:
                 outputstr = "Victim " + mac + " probed for WLAN with ESSID: '" + ssid + "' (KARMA)"
             else:
-                outputstr = "Victim " + mac + " probed for WLAN with ESSID: '" + ssid + "' (Known Beacons)"
+                outputstr = "Victim {} probed for WLAN with ESSID: {} (Known Beacons)".format(
+                    mac, ssid)
             info.append(outputstr)
         return info
 

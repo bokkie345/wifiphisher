@@ -10,11 +10,11 @@ import collections
 from collections import defaultdict
 import scapy.layers.dot11 as dot11
 import scapy.arch.linux as linux
-import wifiphisher.common.constants as constants
 import wifiphisher.extensions.deauth as deauth_extension
+from .constants import (ALL_2G_CHANNELS, EXTENSIONS_LOADPATH)
 
-logger = logging.getLogger(__name__)
-is_deauth_cont = True
+LOGGER = logging.getLogger(__name__)
+should_deauth = True
 
 
 def register_backend_funcs(func):
@@ -31,7 +31,8 @@ def register_backend_funcs(func):
 
 
 class ExtensionManager(object):
-    """
+    """Mange All available extensions.
+
     Extension Manager (EM) defines an API for modular
     architecture in Wifiphisher.
 
@@ -143,8 +144,8 @@ class ExtensionManager(object):
         """
 
         # set the current channel to the ap channel
-        self._nm.set_interface_channel(self._interface,
-                                       int(self._shared_data.target_ap_channel))
+        self._nm.set_interface_channel(
+            self._interface, int(self._shared_data.target_ap_channel))
 
         # if the stop flag not set, change the channel
         while self._should_continue:
@@ -216,8 +217,7 @@ class ExtensionManager(object):
 
         # Initialize all extensions with the shared data
         for extension in self._extensions_str:
-            mod = importlib.import_module(constants.EXTENSIONS_LOADPATH +
-                                          extension)
+            mod = importlib.import_module(EXTENSIONS_LOADPATH + extension)
             extension_class = getattr(mod, extension.title())
             obj = extension_class(shared_data)
             self._extensions.append(obj)
@@ -331,7 +331,7 @@ class ExtensionManager(object):
         # clear the _packets_to_send on every run of the
         # sniffed frame
         self._packets_to_send = defaultdict(list)
-        channels = [str(ch) for ch in constants.ALL_2G_CHANNELS] + ["*"]
+        channels = [str(ch) for ch in ALL_2G_CHANNELS] + ["*"]
         for extension in self._extensions:
             ext_pkts = extension.get_packet(pkt)
             for channel in channels:
@@ -383,10 +383,12 @@ class ExtensionManager(object):
             for pkt in self._packets_to_send[self._current_channel] + \
                     self._packets_to_send["*"]:
                 try:
-                    if is_deauth_cont or not deauth_extension.is_deauth_frame(pkt):
-                        logger.debug("Send pkt with A1:%s A2:%s subtype:%s in channel:%s",
-                                     pkt.addr1, pkt.addr2, pkt.subtype,
-                                     self._current_channel)
+                    if should_deauth or not deauth_extension.is_deauth_frame(
+                            pkt):
+                        LOGGER.debug(
+                            "Send pkt with A1:%s A2:%s subtype:%s in channel:%s",
+                            pkt.addr1, pkt.addr2, pkt.subtype,
+                            self._current_channel)
                         self._socket.send(pkt)
                 except BaseException:
                     continue

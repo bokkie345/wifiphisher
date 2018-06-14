@@ -8,7 +8,7 @@ Extension that sends 3 DEAUTH/DISAS Frames:
 import logging
 from collections import defaultdict
 import scapy.layers.dot11 as dot11
-import wifiphisher.common.constants as constants
+from ..common.constants import (ALL_2G_CHANNELS, WIFI_BROADCAST, NON_CLIENT_ADDRESSES)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +166,7 @@ class Deauth(object):
             channel = ord(packet[dot11.Dot11Elt][2].info)
 
             # check if this is valid channel
-            if channel not in constants.ALL_2G_CHANNELS:
+            if channel not in ALL_2G_CHANNELS:
                 return self._packets_to_send
         except (TypeError, IndexError):
             # just return empty channel and packet
@@ -181,7 +181,7 @@ class Deauth(object):
             # listen beacon to get the target attacking BSSIDs for the
             # specified ESSID
             packets_to_send += self._craft_packet(
-                bssid, constants.WIFI_BROADCAST, bssid)
+                bssid, WIFI_BROADCAST, bssid)
             LOGGER.info("Target deauth BSSID found: %s", bssid)
             # remember the channel of the given bssid
             self._deauth_bssids[bssid] = str(channel)
@@ -250,7 +250,7 @@ class Deauth(object):
         """
 
         # addresses that are not acceptable
-        non_valid_addresses = constants.NON_CLIENT_ADDRESSES.union(
+        non_valid_addresses = NON_CLIENT_ADDRESSES.union(
             self._observed_clients)
 
         # craft the packets
@@ -293,7 +293,7 @@ class Deauth(object):
         if self._data.target_ap_bssid and not self._data.args.deauth_essid\
                 and not self._data.args.channel_monitor:
             return [self._data.target_ap_channel]
-        return map(str, constants.ALL_2G_CHANNELS)
+        return map(str, ALL_2G_CHANNELS)
 
     def on_exit(self):
         """

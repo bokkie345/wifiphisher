@@ -8,8 +8,8 @@ Location Service
 
 import logging
 from collections import defaultdict
-import wifiphisher.common.constants as constants
 import scapy.layers.dot11 as dot11
+from ..common.constants import (LOCS_DIR, WIFI_BROADCAST, AP_RATES)
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class Lure10(object):
         # only run this code once
         if self.first_run and self.data.args.lure10_exploit:
             # locate the lure10 file
-            area_file = constants.LOCS_DIR + self.data.args.lure10_exploit
+            area_file = LOCS_DIR + self.data.args.lure10_exploit
 
             with open(area_file) as _file:
                 for line in _file:
@@ -73,13 +73,12 @@ class Lure10(object):
                     frame_part_0 = dot11.RadioTap()
                     frame_part_1 = dot11.Dot11(
                         subtype=8,
-                        addr1=constants.WIFI_BROADCAST,
+                        addr1=WIFI_BROADCAST,
                         addr2=bssid,
                         addr3=bssid)
                     frame_part_2 = dot11.Dot11Beacon(cap=0x2105)
                     frame_part_3 = dot11.Dot11Elt(ID="SSID", info="")
-                    frame_part_4 = dot11.Dot11Elt(
-                        ID="Rates", info=constants.AP_RATES)
+                    frame_part_4 = dot11.Dot11Elt(ID="Rates", info=AP_RATES)
                     frame_part_5 = dot11.Dot11Elt(ID="DSset", info=chr(7))
 
                     # create a complete packet by combining the parts

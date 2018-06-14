@@ -1,12 +1,16 @@
 """
 This module was made to fork the rogue access point
 """
+
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import os
 import time
 import subprocess
-import wifiphisher.common.constants as constants
 import roguehostapd.config.hostapdconfig as hostapdconfig
 import roguehostapd.apctrl as apctrl
+from .constants import (DEV_NULL, DHCP_LEASE, PUBLIC_DNS, NETWORK_GW_IP,
+                        COLOR_WHITE, COLOR_RED, NETWORK_MASK)
 
 
 class AccessPoint(object):
@@ -134,42 +138,42 @@ class AccessPoint(object):
         config = ('no-resolv\n' 'interface=%s\n' 'dhcp-range=%s\n')
 
         with open('/tmp/dhcpd.conf', 'w') as dhcpconf:
-            dhcpconf.write(config % (self.interface, constants.DHCP_LEASE))
+            dhcpconf.write(config % (self.interface, DHCP_LEASE))
 
         with open('/tmp/dhcpd.conf', 'a+') as dhcpconf:
             if self.internet_interface:
-                dhcpconf.write("server=%s" % (constants.PUBLIC_DNS, ))
+                dhcpconf.write("server=%s" % (PUBLIC_DNS, ))
             else:
-                dhcpconf.write("address=/#/%s" % (constants.NETWORK_GW_IP, ))
+                dhcpconf.write("address=/#/%s" % (NETWORK_GW_IP, ))
         # catch the exception if dnsmasq is not installed
         try:
             subprocess.Popen(
                 ['dnsmasq', '-C', '/tmp/dhcpd.conf'],
                 stdout=subprocess.PIPE,
-                stderr=constants.DN)
+                stderr=DEV_NULL)
         except OSError:
-            print("[" + constants.R + "!" + constants.W + "] " +
-                  "dnsmasq is not installed!")
+            print("[{}!{}] dnsmasq is not installed!".format(
+                COLOR_RED, COLOR_WHITE))
             raise Exception
 
         subprocess.Popen(
             ['ifconfig', str(self.interface), 'mtu', '1400'],
-            stdout=constants.DN,
-            stderr=constants.DN)
+            stdout=DEV_NULL,
+            stderr=DEV_NULL)
 
         subprocess.Popen(
             [
                 'ifconfig',
-                str(self.interface), 'up', constants.NETWORK_GW_IP, 'netmask',
-                constants.NETWORK_MASK
+                str(self.interface), 'up', NETWORK_GW_IP, 'netmask',
+                NETWORK_MASK
             ],
-            stdout=constants.DN,
-            stderr=constants.DN)
+            stdout=DEV_NULL,
+            stderr=DEV_NULL)
         # Give it some time to avoid "SIOCADDRT: Network is unreachable"
         time.sleep(1)
         # Make sure that we have set the network properly.
         proc = subprocess.check_output(['ifconfig', str(self.interface)])
-        if constants.NETWORK_GW_IP not in proc:
+        if NETWORK_GW_IP not in proc:
             return False
 
     def start(self):
@@ -206,36 +210,37 @@ class AccessPoint(object):
             except KeyboardInterrupt:
                 raise Exception
             except BaseException:
-                print("[" + constants.R + "!" + constants.W + "] " +
-                      "Roguehostapd is not installed in the system! Please install"
-                      " roguehostapd manually (https://github.com/wifiphisher/roguehostapd)"
-                      " and rerun the script. Otherwise, you can run the tool with the"
-                      " --force-hostapd option to use hostapd but please note that using"
-                      " Wifiphisher with hostapd instead of roguehostapd will turn off many"
-                      " significant features of the tool.")
+                print(
+                    "[{}!{}] Roguehostapd is not installed in the system! Please install"
+                    " roguehostapd manually (https://github.com/wifiphisher/roguehostapd)"
+                    " and rerun the script. Otherwise, you can run the tool with the"
+                    " --force-hostapd option to use hostapd but please note that using"
+                    " Wifiphisher with hostapd instead of roguehostapd will turn off many"
+                    " significant features of the tool.".format(
+                        COLOR_RED, COLOR_WHITE))
                 # just raise exception when hostapd is not installed
                 raise Exception
         else:
             # use the hostapd on the users' system
-            self.hostapd_object.create_hostapd_conf_file(hostapd_config,
-                                                         {})
+            self.hostapd_object.create_hostapd_conf_file(hostapd_config, {})
             try:
                 self.hostapd_object = subprocess.Popen(
                     ['hostapd', hostapdconfig.ROGUEHOSTAPD_RUNTIME_CONFIGPATH],
-                    stdout=constants.DN,
-                    stderr=constants.DN)
+                    stdout=DEV_NULL,
+                    stderr=DEV_NULL)
             except OSError:
-                print("[" + constants.R + "!" + constants.W + "] " +
-                      "hostapd is not installed in the system! Please download it"
-                      " using your favorite package manager"
-                      "(e.g. apt-get install hostapd) and rerun the script.")
+                print(
+                    "[{}!{}] hostapd is not installed in the system! Please download it"
+                    " using your favorite package manager"
+                    "(e.g. apt-get install hostapd) and rerun the script.".
+                    format(COLOR_RED, COLOR_WHITE))
                 # just raise exception when hostapd is not installed
                 raise Exception
 
             time.sleep(2)
             if self.hostapd_object.poll() is not None:
-                print("[" + constants.R + "!" + constants.W + "] " +
-                      "hostapd failed to lunch!")
+                print("[{}!{}] hostapd failed to lunch!".format(
+                    COLOR_RED, COLOR_WHITE))
                 raise Exception
 
     def on_exit(self):

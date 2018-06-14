@@ -9,7 +9,7 @@ path_to_project_root = os.path.abspath(
 dir_of_data = path_to_project_root + '/data/'
 
 # Basic configuration
-DEV = 1
+DEVELOPMENT_VERSION = 1
 DEAUTH_EXTENSION = "deauth"
 LURE10_EXTENSION = "lure10"
 WPSPBC = "wpspbc"
@@ -48,7 +48,7 @@ NON_CLIENT_ADDRESSES = set([
 ])
 DEFAULT_OUI = '00:00:00'
 LINES_OUTPUT = 3
-DN = open(os.devnull, 'w')
+DEV_NULL = open(os.devnull, 'w')
 INTERFERING_PROCS = [
     "wpa_action", "wpa_supplicant", "wpa_cli", "dhclient", "ifplugd", "dhcdbd",
     "dhcpcd", "udhcpc", "avahi-autoipd", "avahi-daemon", "wlassistant",
@@ -95,15 +95,15 @@ OP_MODE8 = 0x8
 AP_RATES = "\x0c\x12\x18\x24\x30\x48\x60\x6c"
 
 # Console colors
-W = '\033[0m'  # white (normal)
-R = '\033[31m'  # red
-G = '\033[32m'  # green
-O = '\033[33m'  # orange
-B = '\033[34m'  # blue
-P = '\033[35m'  # purple
-C = '\033[36m'  # cyan
-GR = '\033[37m'  # gray
-T = '\033[93m'  # tan
+COLOR_WHITE = "\033[0m"
+COLOR_RED = "\033[31m"
+COLOR_GREEN = "\033[32m"
+COLOR_ORANGE = "\033[33m"
+COLOR_BLUE = "\033[34m"
+COLOR_PURPULE = "\033[35m"
+COLOR_CYAN = "\033[36m"
+COLOR_GREY = "\033[37m"
+COLOR_TAN = "\033[93m"
 
 # Logging configurations
 # possible values for debug levels are:

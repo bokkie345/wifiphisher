@@ -9,13 +9,13 @@ from subprocess import check_output
 import logging
 import pyric
 import pyric.pyw as pyw
-import wifiphisher.common.constants as constants
+from .constants import (DEFAULT_OUI)
 
-logger = logging.getLogger("wifiphisher.interfaces")
+LOGGER = logging.getLogger("wifiphisher.interfaces")
 
 
 class InvalidInterfaceError(Exception):
-    """ Exception class to raise in case of a invalid interface """
+    """Exception class to raise in case of a invalid interface."""
 
     def __init__(self, interface_name, mode=None):
         """
@@ -897,8 +897,10 @@ def generate_random_address():
     .. warning: The first 3 octets are 00:00:00 by default
     """
 
-    mac_address = constants.DEFAULT_OUI + ":{:02x}:{:02x}:{:02x}".format(
-        random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    mac_address = "{}:{:02x}:{:02x}:{:02x}".format(DEFAULT_OUI,
+                                                   random.randint(0, 255),
+                                                   random.randint(0, 255),
+                                                   random.randint(0, 255))
     return mac_address
 
 

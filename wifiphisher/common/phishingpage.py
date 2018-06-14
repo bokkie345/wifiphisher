@@ -3,10 +3,13 @@ This module handles all the phishing related operations for
 Wifiphisher.py
 """
 
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import os
 import ConfigParser
 from shutil import copyfile
-import wifiphisher.common.constants as constants
+from .constants import (PHISHING_PAGES_DIR, SCENARIO_HTML_DIR, COLOR_WHITE,
+                        COLOR_RED)
 
 
 def config_section_map(config_file, section):
@@ -55,25 +58,23 @@ class PhishingTemplate(object):
 
         # setup all the variables
 
-        config_path = os.path.join(constants.PHISHING_PAGES_DIR, name,
-                                   'config.ini')
+        config_path = os.path.join(PHISHING_PAGES_DIR, name, 'config.ini')
         info = config_section_map(config_path, 'info')
 
         self._name = name
         self._display_name = info['name']
         self._description = info['description']
         self._payload = False
-        self._config_path = os.path.join(constants.PHISHING_PAGES_DIR,
-                                         self._name, 'config.ini')
+        self._config_path = os.path.join(PHISHING_PAGES_DIR, self._name,
+                                         'config.ini')
         if 'payloadpath' in info:
             self._payload = info['payloadpath']
 
-        self._path = os.path.join(constants.PHISHING_PAGES_DIR,
-                                  self._name.lower(),
-                                  constants.SCENARIO_HTML_DIR)
-        self._path_static = os.path.join(constants.PHISHING_PAGES_DIR,
-                                         self._name.lower(),
-                                         constants.SCENARIO_HTML_DIR, 'static')
+        self._path = os.path.join(PHISHING_PAGES_DIR, self._name.lower(),
+                                  SCENARIO_HTML_DIR)
+        self._path_static = os.path.join(PHISHING_PAGES_DIR,
+                                         self._name.lower(), SCENARIO_HTML_DIR,
+                                         'static')
 
         self._context = config_section_map(config_path, 'context')
         self._extra_files = []
@@ -296,9 +297,9 @@ class TemplateManager(object):
         """
 
         # setup the templates
-        self._template_directory = constants.PHISHING_PAGES_DIR
+        self._template_directory = PHISHING_PAGES_DIR
 
-        page_dirs = os.listdir(constants.PHISHING_PAGES_DIR)
+        page_dirs = os.listdir(PHISHING_PAGES_DIR)
 
         self._templates = {}
 
@@ -337,10 +338,9 @@ class TemplateManager(object):
         if "config.ini" not in os.listdir(dir_path):
             return False, "Configuration file not found in: "
         try:
-            tdir = os.listdir(
-                os.path.join(dir_path, constants.SCENARIO_HTML_DIR))
+            tdir = os.listdir(os.path.join(dir_path, SCENARIO_HTML_DIR))
         except OSError:
-            return False, "No " + constants.SCENARIO_HTML_DIR + " directory found in: "
+            return False, "No " + SCENARIO_HTML_DIR + " directory found in: "
         # Check HTML files...
         for tfile in tdir:
             if tfile.endswith(".html"):
@@ -378,7 +378,8 @@ class TemplateManager(object):
                 else:
                     # TODO: We should throw an exception instead here.
                     # but if not then display which problem occurred
-                    print "[" + constants.R + "!" + constants.W + "] " + output + name
+                    print("[{}!{}] {} {}".format(COLOR_RED, COLOR_WHITE,
+                                                 output, name))
 
         return local_templates
 

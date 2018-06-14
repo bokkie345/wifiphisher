@@ -8,7 +8,7 @@ import threading
 import time
 import logging
 import scapy.layers.dot11 as dot11
-import wifiphisher.common.constants as constants
+from .constants import (ALL_2G_CHANNELS, NON_CLIENT_ADDRESSES, LOCS_DIR)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class AccessPointFinder(object):
         self._network_manager = network_manager
 
         # filter used to remove non-client addresses
-        self._non_client_addresses = constants.NON_CLIENT_ADDRESSES
+        self._non_client_addresses = NON_CLIENT_ADDRESSES
 
     def _process_packets(self, packet):
         """
@@ -154,7 +154,7 @@ class AccessPointFinder(object):
         elt_section = packet[dot11.Dot11Elt]
         try:
             channel = str(ord(packet[dot11.Dot11Elt][2].info))
-            if int(channel) not in constants.ALL_2G_CHANNELS:
+            if int(channel) not in ALL_2G_CHANNELS:
                 return
         except (TypeError, IndexError):
             return
@@ -222,7 +222,7 @@ class AccessPointFinder(object):
                 store=0)
 
     def capture_aps(self):
-        self._capture_file = constants.LOCS_DIR + "area_" +\
+        self._capture_file = LOCS_DIR + "area_" +\
             time.strftime("%Y%m%d_%H%M%S")
         LOGGER.info("Create lure10-capture file %s", self._capture_file)
 
@@ -273,7 +273,7 @@ class AccessPointFinder(object):
 
         # if the stop flag not set, change the channel
         while self._should_continue:
-            for channel in constants.ALL_2G_CHANNELS:
+            for channel in ALL_2G_CHANNELS:
                 # added this check to reduce shutdown time
                 if self._should_continue:
                     self._network_manager.set_interface_channel(

@@ -2,7 +2,7 @@
 This module was made to match MAC address with vendors
 """
 
-import wifiphisher.common.constants as constants
+from .constants import (LOGOS_DIR)
 
 
 class MACMatcher(object):
@@ -112,7 +112,7 @@ class MACMatcher(object):
         if mac_identifier in self._mac_to_vendor:
             # find the logo and it's path
             logo = self._mac_to_vendor[mac_identifier][1]
-            logo_path = constants.LOGOS_DIR + logo
+            logo_path = LOGOS_DIR + logo
             # return logo name if it was provided otherwise return None
             if logo:
                 return logo_path

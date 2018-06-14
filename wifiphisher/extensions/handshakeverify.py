@@ -14,8 +14,8 @@ from collections import deque
 from collections import defaultdict
 from pbkdf2 import PBKDF2
 import scapy.layers.dot11 as dot11
-import wifiphisher.common.constants as constants
 import wifiphisher.common.extensions as extensions
+from ..constants import (CONST_A)
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +162,7 @@ class Handshakeverify(object):
 
             # calculate PMK first
             pmk = PBKDF2(passphrase, essid, 4096).read(32)
-            ptk = self._prf512(pmk, constants.CONST_A, const_b)
+            ptk = self._prf512(pmk, CONST_A, const_b)
 
             # get the key version to determine using HMAC_SHA1 or HMAC_MD5
             msg4 = self._eapols[3]
